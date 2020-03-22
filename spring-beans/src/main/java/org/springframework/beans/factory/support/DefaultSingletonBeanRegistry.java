@@ -137,11 +137,15 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 
 	/**
 	 * Map between dependent bean names: bean name to Set of dependent bean names.
+	 * key: bean name
+	 * value: 当前bean依赖的bean name
 	 */
 	private final Map<String, Set<String>> dependentBeanMap = new ConcurrentHashMap<>(64);
 
 	/**
 	 * Map between depending bean names: bean name to Set of bean names for the bean's dependencies.
+	 * key：bean name
+	 * value：依赖此bean的bean name
 	 */
 	private final Map<String, Set<String>> dependenciesForBeanMap = new ConcurrentHashMap<>(64);
 
@@ -162,7 +166,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 
 	/**
 	 * Add the given singleton object to the singleton cache of this factory.
-	 * <p>To be called for eager registration of singletons.
+	 * <p>
+	 * To be called for eager registration of singletons.
+	 * <p>
+	 * 将初始化完成的bean,添加到指定的容器中
 	 *
 	 * @param beanName        the name of the bean
 	 * @param singletonObject the singleton object
@@ -179,7 +186,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	/**
 	 * Add the given singleton factory for building the specified singleton
 	 * if necessary.
-	 * <p>To be called for eager registration of singletons, e.g. to be able to
+	 * <p>
+	 * To be called for eager registration of singletons, e.g. to be able to
 	 * resolve circular references.
 	 *
 	 * @param beanName         the name of the bean
@@ -247,10 +255,14 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * @param singletonFactory the ObjectFactory to lazily create the singleton
 	 *                         with, if necessary
 	 * @return the registered singleton object
+	 *
+	 * todo 研究清楚：BeanFactory & FactoryBean & ObjectFactory 并实现Demo
 	 */
 	public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(beanName, "Bean name must not be null");
+		// 添加 全局锁
 		synchronized (this.singletonObjects) {
+			// 是否已经创建过
 			Object singletonObject = this.singletonObjects.get(beanName);
 			if (singletonObject == null) {
 				if (this.singletonsCurrentlyInDestruction) {
@@ -261,6 +273,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
+				// bean创建前置处理
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
@@ -384,6 +397,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * @see #isSingletonCurrentlyInCreation
 	 */
 	protected void beforeSingletonCreation(String beanName) {
+		// 将 beanName 添加到 singletonsCurrentlyInCreation，如果添加失败则抛出异常
 		if (!this.inCreationCheckExclusions.contains(beanName) && !this.singletonsCurrentlyInCreation.add(beanName)) {
 			throw new BeanCurrentlyInCreationException(beanName);
 		}
@@ -397,6 +411,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * @see #isSingletonCurrentlyInCreation
 	 */
 	protected void afterSingletonCreation(String beanName) {
+		// 将 beanName 从 singletonsCurrentlyInCreation 移除，如果移除失败则抛出异常
 		if (!this.inCreationCheckExclusions.contains(beanName) && !this.singletonsCurrentlyInCreation.remove(beanName)) {
 			throw new IllegalStateException("Singleton '" + beanName + "' isn't currently in creation");
 		}
@@ -466,8 +481,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 
 	/**
-	 * Determine whether the specified dependent bean has been registered as
-	 * dependent on the given bean or on any of its transitive dependencies.
+	 * 确定指定的依赖bean是否已注册为依赖于给定bean或其任何传递依赖。
 	 *
 	 * @param beanName          the name of the bean to check
 	 * @param dependentBeanName the name of the dependent bean
@@ -483,7 +497,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		if (alreadySeen != null && alreadySeen.contains(beanName)) {
 			return false;
 		}
+		// 获取 bean name
 		String canonicalName = canonicalName(beanName);
+		// 获取当前 bean 的依赖 bean 名称
 		Set<String> dependentBeans = this.dependentBeanMap.get(canonicalName);
 		if (dependentBeans == null) {
 			return false;
@@ -491,6 +507,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		if (dependentBeans.contains(dependentBeanName)) {
 			return true;
 		}
+
+		// TODO: 2020-03-22 递归的目的待研究
 		for (String transitiveDependency : dependentBeans) {
 			if (alreadySeen == null) {
 				alreadySeen = new HashSet<>();
