@@ -54,6 +54,10 @@ public abstract class BeanFactoryUtils {
 
 	/**
 	 * Cache from name with factory bean prefix to stripped name without dereference.
+	 * 根据beanName获取处理后的Bean的名称: {@link #transformedBeanName(String)}
+	 * key: 原beanName（方法入参传递的是 beanName，不一定就是 beanName，可能是 aliasName ，也有可能是 FactoryBean ，
+	 * 		所以这里需要调用 #transformedBeanName(String name) 方法，对 name 进行一番转换。）
+	 * value：处理后的beanName
 	 * @since 5.1
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
 	 */
@@ -83,8 +87,12 @@ public abstract class BeanFactoryUtils {
 		if (!name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX)) {
 			return name;
 		}
+		// computeIfAbsent:
+		// 1. 如果存在则不处理，直接获取返回；
+		// 2. 如果不存在，则处理后，并put到此 transformedBeanNameCache
 		return transformedBeanNameCache.computeIfAbsent(name, beanName -> {
 			do {
+				// 循环去掉beanName前缀：“#”
 				beanName = beanName.substring(BeanFactory.FACTORY_BEAN_PREFIX.length());
 			}
 			while (beanName.startsWith(BeanFactory.FACTORY_BEAN_PREFIX));
