@@ -144,7 +144,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	private BeanExpressionResolver beanExpressionResolver;
 
 	/**
-	 * Spring ConversionService to use instead of PropertyEditors.
+	 * 使用Spring ConversionService代替PropertyEditors。
 	 */
 	@Nullable
 	private ConversionService conversionService;

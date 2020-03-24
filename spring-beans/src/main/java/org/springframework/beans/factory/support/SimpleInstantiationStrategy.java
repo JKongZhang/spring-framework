@@ -140,6 +140,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 		try {
 			if (System.getSecurityManager() != null) {
 				AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+					// 通过反射设置方法 access = true
 					ReflectionUtils.makeAccessible(factoryMethod);
 					return null;
 				});
@@ -148,9 +149,11 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 				ReflectionUtils.makeAccessible(factoryMethod);
 			}
 
+			// TODO: 2020-03-24 为什么采用这种方式？目的是什么？
 			Method priorInvokedFactoryMethod = currentlyInvokedFactoryMethod.get();
 			try {
 				currentlyInvokedFactoryMethod.set(factoryMethod);
+				// 通过 factoryBean 来实例化 bean
 				Object result = factoryMethod.invoke(factoryBean, args);
 				if (result == null) {
 					result = new NullBean();
