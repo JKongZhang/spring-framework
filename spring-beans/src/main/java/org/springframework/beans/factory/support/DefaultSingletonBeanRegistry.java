@@ -137,6 +137,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 
 	/**
 	 * Map between dependent bean names: bean name to Set of dependent bean names.
+	 * 保存的是依赖 beanName 之间的映射关系：beanName - > 依赖 beanName 的集合
 	 * key: bean name
 	 * value: 当前bean依赖的bean name
 	 */
@@ -144,6 +145,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 
 	/**
 	 * Map between depending bean names: bean name to Set of bean names for the bean's dependencies.
+	 * 保存的是依赖 beanName 之间的映射关系：依赖 beanName - > beanName 的集合
 	 * key：bean name
 	 * value：依赖此bean的bean name
 	 */
@@ -255,7 +257,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * @param singletonFactory the ObjectFactory to lazily create the singleton
 	 *                         with, if necessary
 	 * @return the registered singleton object
-	 *
+	 * <p>
 	 * todo 研究清楚：BeanFactory & FactoryBean & ObjectFactory 并实现Demo
 	 */
 	public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
@@ -463,8 +465,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * @param dependentBeanName the name of the dependent bean
 	 */
 	public void registerDependentBean(String beanName, String dependentBeanName) {
+		// 获取 beanName
 		String canonicalName = canonicalName(beanName);
-
+		// 添加 <canonicalName, <dependentBeanName>> 到 dependentBeanMap 中
 		synchronized (this.dependentBeanMap) {
 			Set<String> dependentBeans =
 					this.dependentBeanMap.computeIfAbsent(canonicalName, k -> new LinkedHashSet<>(8));
@@ -473,6 +476,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 			}
 		}
 
+		// 添加 <dependentBeanName, <canonicalName>> 到 dependenciesForBeanMap 中
 		synchronized (this.dependenciesForBeanMap) {
 			Set<String> dependenciesForBean =
 					this.dependenciesForBeanMap.computeIfAbsent(dependentBeanName, k -> new LinkedHashSet<>(8));

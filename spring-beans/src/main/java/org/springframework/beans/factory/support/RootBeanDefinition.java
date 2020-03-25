@@ -46,6 +46,8 @@ import org.springframework.util.Assert;
  * GenericBeanDefinition has the advantage that it allows to dynamically define
  * parent dependencies, not 'hard-coding' the role as a root bean definition.
  *
+ * todo 此类非常重要，需要详细理解
+ *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @see GenericBeanDefinition
@@ -98,7 +100,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 
 	/**
 	 * Common lock for the four constructor fields below.
-	 * // 构造函数的缓存锁
+	 * 构造函数的缓存锁
 	 */
 	final Object constructorArgumentLock = new Object();
 
@@ -124,6 +126,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 
 	/**
 	 * Package-visible field for caching partly prepared constructor arguments.
+	 * 包可见的字段，用于缓存部分准备好的构造函数参数。
 	 */
 	@Nullable
 	Object[] preparedConstructorArguments;
